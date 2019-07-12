@@ -77,7 +77,7 @@ class xvmpVideoPlayer {
 		$tpl->addJavaScript(ilViMPPlugin::getInstance()->getDirectory() . '/node_modules/video.js/dist/video.min.js');
 		$tpl->addCss(ilViMPPlugin::getInstance()->getDirectory() . '/node_modules/video.js/dist/video-js.min.css');
 		$tpl->addJavaScript(ilViMPPlugin::getInstance()->getDirectory()
-			. '/node_modules/videojs-contrib-quality-levels/videojs-contrib-quality-levels.min.js');
+			. '/node_modules/videojs-contrib-quality-levels/dist/videojs-contrib-quality-levels.min.js');
 		$tpl->addJavaScript(ilViMPPlugin::getInstance()->getDirectory()
 			. '/node_modules/videojs-http-source-selector/dist/videojs-http-source-selector.min.js');
 	}
@@ -98,7 +98,7 @@ class xvmpVideoPlayer {
 		$isABRStream = false;
 
 		if (is_array($medium)) {
-			if (xvmpRequest::config('adaptive_bitrate_streaming')->getResponseArray()['config']['value']) {
+			if (xvmpConfig::find('adaptive_bitrate_streaming')->getValue()) {
 				$isABRStream = true;
 				$medium = html_entity_decode(end($medium));
 				$medium = str_replace('mp4', 'smil', $medium);
@@ -136,11 +136,11 @@ class xvmpVideoPlayer {
 			}
 		}
 
-		$chapters = json_decode(xvmpRequest::getChapters($this->video->getMediakey())->getResponseBody());
+		$chapters = xvmpChapters::find($this->video->getMediakey())->getChapters();
 
-		if ($chapters->chapters) {
+		if (is_array($chapters) && !empty($chapters)) {
 			$output = "WEBVTT \n\n";
-			foreach ($chapters->chapters as $chapter) {
+			foreach ($chapters as $chapter) {
 				$output .= gmdate("H:i:s", $chapter->time) . ".000 --> " . gmdate("H:i:s", $chapter->time) . ".000\n" . $chapter->title . "\n\n";
 			}
 

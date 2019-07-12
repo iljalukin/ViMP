@@ -42,6 +42,8 @@ conf_cache_ttl_categories#:#TTL Categories
 conf_cache_ttl_categories_info#:#Time-To-Live in seconds
 conf_cache_ttl_token#:#TTL Token
 conf_cache_ttl_token_info#:#Time-To-Live in seconds
+conf_cache_ttl_config#:#TTL Config
+conf_cache_ttl_config_info#:#Time-To-Live in seconds
 conf_cache#:#Caching
 conf_cache_info#:#Objects are cached to improve performance. After the TTL of an object is expired, it will be removed and reloaded (if TTL = 0, the object will not be removed automatically). Flush the whole cache with the button on top of this form or flush only the video cache inside a ViMP Object.
 conf_embed_player#:#Embedded Video Player
@@ -52,6 +54,8 @@ conf_form_field_type_0#:#Text Field
 conf_form_field_type_1#:#Checkbox
 conf_upload_limit#:#Upload Limit (MB)
 conf_upload_limit_info#:#Limit for the uploaded filesize in MB. Enter '0' for no limit.
+conf_disable_verify_peer#:#Disable Peer Verification
+conf_disable_verify_peer_info#:#Deactivates the verification of the SSL certificate owner when communicating with the ViMP server.
 msg_success#:#Changes saved successfully.
 selection#:#Selection
 all#:#Yes, all

@@ -19,6 +19,7 @@ class xvmpConf extends ActiveRecord {
 	const F_API_USER = 'api_user';
 	const F_API_PASSWORD = 'api_password';
 	const F_API_URL = 'api_url';
+	const F_DISABLE_VERIFY_PEER = 'disable_verify_peer';
 	const F_USER_MAPPING_EXTERNAL = 'user_mapping_ext';
 	const F_USER_MAPPING_LOCAL = 'user_mapping_local';
 
@@ -37,6 +38,7 @@ class xvmpConf extends ActiveRecord {
 	const F_CACHE_TTL_USERS = 'cache_ttl_users';
 	const F_CACHE_TTL_CATEGORIES = 'cache_ttl_categories';
 	const F_CACHE_TTL_TOKEN = 'cache_ttl_token';
+	const F_CACHE_TTL_CONFIG = 'cache_ttl_config';
 	const F_FILTER_FIELDS = 'filter_fields';
 	const F_FILTER_FIELD_ID = 'filter_id';
 	const F_FILTER_FIELD_TITLE = 'filter_title';
