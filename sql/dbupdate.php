@@ -73,6 +73,7 @@ if (!$query->numRows()) {
 <#5>
 <?php
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ViMP/classes/Model/AR/class.xvmpConf.php');
+xvmpConf::set(xvmpConf::F_MEDIA_PERMISSIONS_PRESELECTED, 1);
 xvmpConf::set(xvmpConf::F_NOTIFICATION_SUBJECT_SUCCESSFULL, 'Transkodierung abgeschlossen');
 xvmpConf::set(xvmpConf::F_NOTIFICATION_BODY_SUCCESSFULL, 'Guten Tag {FIRSTNAME} {LASTNAME},
 

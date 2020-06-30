@@ -116,6 +116,19 @@ class xvmpConfFormGUI extends xvmpFormGUI {
 		$input->setInfo($this->pl->confTxt(xvmpConf::F_OBJECT_TITLE . '_info'));
 		$this->addItem($input);
 
+
+		// Default Publication
+                $input = new ilSelectInputGUI($this->pl->confTxt(xvmpConf::F_DEFAULT_PUBLICATION), xvmpConf::F_DEFAULT_PUBLICATION);
+                $input->setOptions(array(
+                        9 => $this->pl->txt('not_set'),
+                        0 => $this->pl->txt('public'),
+                        1 => $this->pl->txt('private'),
+                        2 => $this->pl->txt('hidden'),
+                ));
+
+                $input->setInfo($this->pl->confTxt(xvmpConf::F_DEFAULT_PUBLICATION . '_info'));
+                $this->addItem($input);
+
 		// Allow Public Upload
 		$input = new ilCheckboxInputGUI($this->pl->confTxt(xvmpConf::F_ALLOW_PUBLIC), xvmpConf::F_ALLOW_PUBLIC);
 		$input->setInfo($this->pl->confTxt(xvmpConf::F_ALLOW_PUBLIC . '_info'));
@@ -178,6 +191,12 @@ class xvmpConfFormGUI extends xvmpFormGUI {
 		$radio_option->addSubItem($sub_selection);
 		$input->addOption($radio_option);
 
+		$this->addItem($input);
+
+
+		// Media Permission Preselection
+		$input = new ilCheckboxInputGUI($this->pl->confTxt(xvmpConf::F_MEDIA_PERMISSIONS_PRESELECTED), xvmpConf::F_MEDIA_PERMISSIONS_PRESELECTED);
+		$input->setInfo($this->pl->confTxt(xvmpConf::F_MEDIA_PERMISSIONS_PRESELECTED . '_info'));
 		$this->addItem($input);
 
 
