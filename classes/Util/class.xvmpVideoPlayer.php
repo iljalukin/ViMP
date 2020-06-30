@@ -80,6 +80,9 @@ class xvmpVideoPlayer {
 			. '/node_modules/videojs-contrib-quality-levels/dist/videojs-contrib-quality-levels.min.js');
 		$tpl->addJavaScript(ilViMPPlugin::getInstance()->getDirectory()
 			. '/node_modules/videojs-http-source-selector/dist/videojs-http-source-selector.min.js');
+        $tpl->addCss(ilViMPPlugin::getInstance()->getDirectory() . '/node_modules/videojs-vr/dist/videojs-vr.css');
+        $tpl->addJavaScript(ilViMPPlugin::getInstance()->getDirectory()
+            . '/node_modules/videojs-vr/dist/videojs-vr.min.js');
 	}
 
 
@@ -97,8 +100,10 @@ class xvmpVideoPlayer {
 		$medium = $this->video->getMedium();
 		$isABRStream = false;
 
+		$abr_conf = xvmpConfig::find('adaptive_bitrate_streaming')->getValue();
+
 		if (is_array($medium)) {
-			if (xvmpConfig::find('adaptive_bitrate_streaming')->getValue()) {
+			if (xvmp::ViMPVersionGreaterEquals('4.1.0') && $abr_conf) {
 				$isABRStream = true;
 				$medium = html_entity_decode(end($medium));
 				$medium = str_replace('mp4', 'smil', $medium);
@@ -109,8 +114,7 @@ class xvmpVideoPlayer {
 		$id = ilUtil::randomhash();
 
 		if (xvmp::ViMPVersionGreaterEquals('4.0.5')) {
-		    $pathinfo['extension'] = 'application/x-mpegURL';
-//			$pathinfo['extension'] = 'video/' . pathinfo($medium)['extension'];     // dev
+		    $pathinfo['extension'] = $abr_conf ? 'application/x-mpegURL' : 'video/' . pathinfo($medium)['extension'];
 			$medium = urldecode($medium);
 		} else {
 			$pathinfo['extension'] = 'video/' . pathinfo($medium)['extension'];
@@ -170,6 +174,12 @@ class xvmpVideoPlayer {
 		if ($isABRStream) {
 			$videojs_script .= "player.httpSourceSelector();";
 		}
+
+        if ($this->video->getProperties()['source-is360video']) {
+            $videojs_script .= "player.mediainfo = player.mediainfo || {};";
+            $videojs_script .= "player.mediainfo.projection = '360';";
+            $videojs_script .= "player.vr();";
+        }
 
 		$template->setCurrentBlock('script');
 		$template->setVariable('SCRIPT', $videojs_script);

@@ -277,6 +277,7 @@ class xvmpMedium extends xvmpObject {
 		$ilUser = $DIC['ilUser'];
 		$response = xvmpRequest::uploadMedium($video);
 		$medium = $response->getResponseArray()['medium'];
+		$ref_id = array_shift(ilObject::_getAllReferences($obj_id));
 
 		if ($add_automatically) {
 			xvmpSelectedMedia::addVideo($medium['mid'], $obj_id, false);
@@ -288,6 +289,7 @@ class xvmpMedium extends xvmpObject {
 		$uploaded_media->setEmail($ilUser->getEmail());
 		$uploaded_media->setUserId($ilUser->getId());
 		$uploaded_media->setTmpId($tmp_id);
+		$uploaded_media->setRefId($ref_id);
 		$uploaded_media->create();
 
 		return $medium;
@@ -310,8 +312,8 @@ class xvmpMedium extends xvmpObject {
 	 * some attributes have to be formatted to fill the form correctly
 	 */
 	public static function formatResponse($response) {
-		$response['duration_formatted'] = sprintf('%02d:%02d', ($response['duration']/60%60), $response['duration']%60);
-		$response['description'] = strip_tags($response['description']);
+        $response['duration_formatted'] = gmdate("H:i:s", $response['duration']);
+        $response['description'] = strip_tags(html_entity_decode($response['description']));
 
 		if (is_array($response['mediapermissions']['rid'])) {
 			$response['mediapermissions'] = $response['mediapermissions']['rid'];
@@ -323,9 +325,11 @@ class xvmpMedium extends xvmpObject {
 			if (isset($response[$labels[0]][$labels[1]][$labels[2]])) {
 				$response[$labels[0]][$labels[1]] = array($response[$labels[0]][$labels[1]] );
 			}
-			foreach ($response[$labels[0]][$labels[1]] as $item) {
-				$result[$item[$labels[2]]] = $item['name'];
-			}
+			if (is_array($response[$labels[0]][$labels[1]])) {
+                foreach ($response[$labels[0]][$labels[1]] as $item) {
+                    $result[$item[$labels[2]]] = $item['name'];
+                }
+            }
 			$response[$labels[0]] = $labels[0] == 'tags' ? implode(', ', $result) : $result;
 		}
 		return $response;
@@ -730,8 +734,8 @@ class xvmpMedium extends xvmpObject {
 	 * @return String
 	 */
 	public function getDescription($max_length = 0) {
-		if ($max_length && strlen($this->description) > $max_length) {
-			return substr($this->description, 0, $max_length) . '...';
+		if ($max_length && mb_strlen($this->description) > $max_length) {
+			return mb_substr($this->description, 0, $max_length) . '...';
 		}
 		return $this->description;
 	}

@@ -18,12 +18,17 @@ class xvmpContentGUI extends xvmpGUI {
 	const CMD_RENDER_ITEM = 'renderItem';
 	const CMD_RENDER_TILE_SMALL = 'renderTileSmall';
 	const CMD_DELIVER_VIDEO = 'deliverVideo';
+	const CMD_PLAY_VIDEO = 'playVideo';
+    const GET_TEMPLATE = 'tpl';
 
-	/**
+
+    /**
 	 *
 	 */
-	protected function index() {
-		xvmpVideoPlayer::loadVideoJSAndCSS(!xvmpConf::getConfig(xvmpConf::F_EMBED_PLAYER));
+	protected function index($play_video_id = null) {
+        /** @var xvmpSettings $settings */
+        $settings = xvmpSettings::find($this->getObjId());
+		xvmpVideoPlayer::loadVideoJSAndCSS($settings->getLpActive() && !xvmpConf::getConfig(xvmpConf::F_EMBED_PLAYER));
 
 		if (!$this->ctrl->isAsynch() && ilObjViMPAccess::hasWriteAccess()) {
 			$this->addFlushCacheButton();
@@ -34,16 +39,24 @@ class xvmpContentGUI extends xvmpGUI {
 		switch ($layout_type) {
 			case xvmpSettings::LAYOUT_TYPE_LIST:
 				$xvmpContentListGUI = new xvmpContentListGUI($this);
-				$xvmpContentListGUI->show();
+				if (!is_null($play_video_id)) {
+                    $this->tpl->setContent($xvmpContentListGUI->getHTML() . $this->getFilledModalPlayer($play_video_id)->getHTML());
+                } else {
+                    $this->tpl->setContent($xvmpContentListGUI->getHTML() . self::getModalPlayer()->getHTML());
+                }
 				break;
 			case xvmpSettings::LAYOUT_TYPE_TILES:
 				$xvmpContentTilesGUI = new xvmpContentTilesGUI($this);
-				$xvmpContentTilesGUI->show();
-				break;
+                if (!is_null($play_video_id)) {
+                    $this->tpl->setContent($xvmpContentTilesGUI->getHTML() . $this->getFilledModalPlayer($play_video_id)->getHTML());
+                } else {
+                    $this->tpl->setContent($xvmpContentTilesGUI->getHTML() . self::getModalPlayer()->getHTML());
+                }
+                break;
 			case xvmpSettings::LAYOUT_TYPE_PLAYER:
 				$xvmpContentPlayerGUI = new xvmpContentPlayerGUI($this);
-				$xvmpContentPlayerGUI->show();
-				break;
+                $this->tpl->setContent($xvmpContentPlayerGUI->getHTML());
+                break;
 		}
 	}
 
@@ -61,40 +74,52 @@ class xvmpContentGUI extends xvmpGUI {
 	}
 
 
+    /**
+     * used for goto link
+     */
+	public function playVideo() {
+	    $mid = filter_input(INPUT_GET, ilObjViMPGUI::GET_VIDEO_ID, FILTER_SANITIZE_NUMBER_INT);
+	    if ($mid) {
+	        $this->tpl->addOnLoadCode('$(\'#xvmp_modal_player\').modal(\'show\');');
+        }
+        $this->index($mid);
+    }
+
 	/**
 	 * ajax
 	 */
 	public function renderItem() {
-		$mid = $_GET['mid'];
-		$template = $_GET['tpl'];
+        $mid = filter_input(INPUT_GET, ilObjViMPGUI::GET_VIDEO_ID, FILTER_SANITIZE_NUMBER_INT);
+        $template = filter_input(INPUT_GET, self::GET_TEMPLATE, FILTER_SANITIZE_STRING);
 		try {
 			$video = xvmpMedium::find($mid);
-			$tpl = new ilTemplate("tpl.content_{$template}.html", true, true, $this->pl->getDirectory());
+            if ($video instanceof xvmpDeletedMedium) {
+                echo 'deleted';
+                exit;
+            }
+            $tpl = new ilTemplate("tpl.content_{$template}.html", true, true, $this->pl->getDirectory());
 
 			$tpl->setVariable('MID', $mid);
 			$tpl->setVariable('THUMBNAIL', $video->getThumbnail());
 			$tpl->setVariable('TITLE', $video->getTitle());
 			$tpl->setVariable('DESCRIPTION', strip_tags($video->getDescription(50)));
 
-			if (!$video instanceof xvmpDeletedMedium) {
+            if ($video->getStatus() !== 'legal') {
+                $tpl->setCurrentBlock('info_transcoding');
+                $tpl->setVariable('INFO_TRANSCODING', $this->pl->txt('info_transcoding_short'));
+                $tpl->parseCurrentBlock();
+            }
 
-				if ($video->getStatus() !== 'legal') {
-					$tpl->setCurrentBlock('info_transcoding');
-					$tpl->setVariable('INFO_TRANSCODING', $this->pl->txt('info_transcoding_short'));
-					$tpl->parseCurrentBlock();
-				}
-
-				$tpl->setVariable('LABEL_TITLE', $this->pl->txt( xvmpMedium::F_TITLE) . ':');
-				$tpl->setVariable('LABEL_DESCRIPTION', $this->pl->txt(xvmpMedium::F_DESCRIPTION) . ':');
-				$tpl->setVariable('LABEL_DURATION', $this->pl->txt(xvmpMedium::F_DURATION) . ':');
-				$tpl->setVariable('DURATION', $video->getDurationFormatted());
-				$tpl->setVariable('LABEL_CREATED_AT', $this->pl->txt(xvmpMedium::F_CREATED_AT) . ':');
-				$tpl->setVariable('CREATED_AT', $video->getCreatedAt('d.m.Y, H:i'));
-				if (xvmp::showWatched($this->getObjId(), $video)) {
-					$tpl->setVariable('LABEL_WATCHED', $this->pl->txt('watched') . ':');
-					$tpl->setVariable('WATCHED', xvmpUserProgress::calcPercentage($this->user->getId(), $mid) . '%');
-				}
-			}
+            $tpl->setVariable('LABEL_TITLE', $this->pl->txt( xvmpMedium::F_TITLE) . ':');
+            $tpl->setVariable('LABEL_DESCRIPTION', $this->pl->txt(xvmpMedium::F_DESCRIPTION) . ':');
+            $tpl->setVariable('LABEL_DURATION', $this->pl->txt(xvmpMedium::F_DURATION) . ':');
+            $tpl->setVariable('DURATION', $video->getDurationFormatted());
+            $tpl->setVariable('LABEL_CREATED_AT', $this->pl->txt(xvmpMedium::F_CREATED_AT) . ':');
+            $tpl->setVariable('CREATED_AT', $video->getCreatedAt('d.m.Y, H:i'));
+            if (xvmp::showWatched($this->getObjId(), $video)) {
+                $tpl->setVariable('LABEL_WATCHED', $this->pl->txt('watched') . ':');
+                $tpl->setVariable('WATCHED', xvmpUserProgress::calcPercentage($this->user->getId(), $mid) . '%');
+            }
 
 			echo $tpl->get();
 			exit;

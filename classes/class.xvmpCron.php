@@ -50,13 +50,18 @@ class xvmpCron {
 
 	public function initILIAS() {
 		chdir(substr($_SERVER['SCRIPT_FILENAME'], 0, strpos($_SERVER['SCRIPT_FILENAME'], '/Customizing')));
-		require_once('include/inc.ilias_version.php');
-		require_once('Services/Component/classes/class.ilComponent.php');
+		require_once 'include/inc.ilias_version.php';
+		require_once 'Services/Component/classes/class.ilComponent.php';
 		require_once './Services/Cron/classes/class.ilCronStartUp.php';
+		require_once './Customizing/global/plugins/Services/Repository/RepositoryObject/ViMP/classes/class.xvmp.php';
 
 		$ilCronStartup = new ilCronStartUp($_SERVER['argv'][3], $_SERVER['argv'][1], $_SERVER['argv'][2]);
-		$ilCronStartup->initIlias();
+		if (!xvmp::is54()) {
+		    $ilCronStartup->initIlias();
+        }
 		$ilCronStartup->authenticate();
+
+		$this->buildHTTPPath();
 
 		require_once './Services/Mail/classes/class.ilMimeMail.php';
 		require_once './Services/Mail/classes/class.ilMail.php';
@@ -68,6 +73,15 @@ class xvmpCron {
 			$ilSetting = new ilSessionMock();
 		}
 	}
+
+    /**
+     * builds http path
+     */
+    protected function buildHTTPPath()
+    {
+        global $DIC;
+        define('ILIAS_HTTP_PATH', $DIC['ilIliasIniFile']->readVariable('server', 'http_path'));
+    }
 
 
 	/**
@@ -104,7 +118,7 @@ class xvmpCron {
                         default:
                             $uploaded_medium->delete();
                     }
-				
+
 			} catch (xvmpException $e) {
 				if ($e->getCode() == 404 && strpos($e->getMessage(), "Medium not exist") !== false) {
 					$uploaded_medium->delete();
@@ -132,8 +146,6 @@ class xvmpCron {
 	 * @param xvmpUploadedMedia $uploaded_medium
 	 */
 	protected function sendNotification(xvmpMedium $medium, xvmpUploadedMedia $uploaded_medium, $transcoding_succeeded) {
-//		xvmpLog::getInstance()->write('Medium transcoding ' . ($transcoding_succeeded ? 'succeeded:' : 'failed:') . $medium->getTitle() . ' (' . $medium->getMid() . ')');
-
 		$subject = xvmpConf::getConfig($transcoding_succeeded ? xvmpConf::F_NOTIFICATION_SUBJECT_SUCCESSFULL : xvmpConf::F_NOTIFICATION_SUBJECT_FAILED);
 		$body = xvmpConf::getConfig($transcoding_succeeded ? xvmpConf::F_NOTIFICATION_BODY_SUCCESSFULL : xvmpConf::F_NOTIFICATION_BODY_FAILED);
 
@@ -144,6 +156,15 @@ class xvmpCron {
 
 		$body = str_replace('{TITLE}', $medium->getTitle(), $body);
 		$body = str_replace('{DESCRIPTION}', $medium->getDescription(), $body);
+
+
+        $deep_link = ilLink::_getStaticLink(
+            $uploaded_medium->getRefId(),
+            'xvmp',
+            true,
+            '_' . $uploaded_medium->getMid()
+        );
+        $body = str_replace('{VIDEO_LINK}', $deep_link, $body);
 
 		// send mail
 		$notification = new ilMail(ANONYMOUS_USER_ID);

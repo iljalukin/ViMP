@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.3.6]
+- Bugfix: Introduced LP permissions
+
+## [1.3.5]
+- Bugfix: fixed direct link for content player (don't open modal)
+- Bugfix: changed to mb_substr to avoid umlaut bugs
+- Improvement: hide deleted videos in content tab
+
+## [1.3.4]
+- Bugfix: fixed bug when playing videos in page component plugin
+
+## [1.3.3]
+- Improvement: load LP observer only if LP is active
+- Improvement: improved LP observer performance
+- Change: changed intervall for LP observer from 2 to 5 sec
+
+## [1.3.2]
+- Bugfix: Player didn't work without adaptive streaming
+
+## [1.3.1]
+- Improvement: 360 degree video support
+- Improvement: setting videos public/hidden can now be globally deactivated
+- Bugfix: Check ViMP version for adaptive bitrate streaming
+- Bugfix: Umlauts failed in shortened descriptions
+- Bugfix: missing import in cronjob
+- Bugfix: deep links didn't work for ilias 5.3
+
+## [1.3.0]
+- Feature: Deep Links for Videos
+- Feature: show deep link in video and notification
+- Feature: link thumbnail in repository preview to video
+
+## [1.2.1]
+- Bugfix: missing lang var for 'published' in own videos table
+- Bugfix: video length >1h didn't show the hours
+- Bugfix: HTML in video description showed tags
+
 ## [1.2.0]
 - Feature: Support for ILIAS Version 5.4.x
 - Change: Dropped support for ILIAS Version 5.2.x

@@ -47,10 +47,13 @@ class xvmpContentPlayerGUI {
 	}
 
 
-	/**
-	 * @throws xvmpException
-	 */
-	public function show() {
+    /**
+     * @return string|void
+     * @throws arException
+     * @throws ilTemplateException
+     * @throws xvmpException
+     */
+	public function getHTML() {
 		$selected_media = xvmpSelectedMedia::where(array('obj_id' => $this->parent_gui->getObjId(), 'visible' => 1))->orderBy('sort');
 		if (!$selected_media->hasSets()) {
 			ilUtil::sendInfo($this->pl->txt('msg_no_videos'));
@@ -104,7 +107,11 @@ class xvmpContentPlayerGUI {
 				$player_tpl->setVariable('VALUE', $this->pl->txt('watched') . ': ' . xvmpUserProgress::calcPercentage($this->user->getId(), $mid) . '%');
 				$player_tpl->parseCurrentBlock();
 			}
-		}
+
+			$perm_link = (new ilPermanentLinkGUI($this->parent_gui->getObject()->getType(), $this->parent_gui->getObject()->getRefId(), '_' . $video->getMid()));
+			$perm_link->setIncludePermanentLinkText(false);
+            $player_tpl->setVariable('PERMANENT_LINK', $perm_link->getHTML());
+        }
 
 		$tiles_tpl = new ilTemplate('tpl.content_tiles_waiting.html', true, true, $this->pl->getDirectory());
 		$json_array = array();
@@ -132,7 +139,9 @@ class xvmpContentPlayerGUI {
 			$time_ranges = '[]';
 		}
 
-		if (!xvmpConf::getConfig(xvmpConf::F_EMBED_PLAYER)) {
+		/** @var xvmpSettings $settings */
+		$settings = xvmpSettings::find($this->parent_gui->getObjId());
+		if ($settings->getLpActive() && !xvmpConf::getConfig(xvmpConf::F_EMBED_PLAYER)) {
 			$this->tpl->addOnLoadCode('VimpObserver.init(' . $mid  . ', ' . $time_ranges . ');');
 		}
 		$this->tpl->addOnLoadCode('VimpContent.selected_media = ' . json_encode($json_array) . ';');
@@ -141,6 +150,6 @@ class xvmpContentPlayerGUI {
 		$this->tpl->addOnLoadCode('VimpContent.loadTilesInOrder(0);');
 //        $this->tpl->addOnLoadCode('VimpContent.loadTiles();');
 
-		$this->tpl->setContent($player_tpl->get());
+		return $player_tpl->get();
 	}
 }
